@@ -36,6 +36,17 @@ class Auth
         }
     }
 
+    public static function getAdminUser(): array
+    {
+        self::startSession();
+        return [
+            'id'        => $_SESSION['softlixx_admin_id'] ?? null,
+            'username'  => $_SESSION['softlixx_username'] ?? 'admin',
+            'full_name' => $_SESSION['softlixx_name'] ?? 'Administrator',
+            'name'      => $_SESSION['softlixx_name'] ?? 'Administrator'
+        ];
+    }
+
     public static function login(string $username, string $password): bool
     {
         self::startSession();

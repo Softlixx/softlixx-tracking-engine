@@ -386,12 +386,26 @@ class ApiController
         $extId = trim($_GET['external_client_id'] ?? '');
         $email = strtolower(trim($_GET['recipient_email'] ?? ''));
 
-        if (empty($extId) && empty($email)) {
-            self::jsonResponse(['error' => 'external_client_id or recipient_email is required'], 422);
-        }
-
         try {
             $db = Database::getConnection();
+
+            if (empty($extId) && empty($email)) {
+                // High-performance bulk sync mode: retrieve recent 500 emails
+                $stmt = $db->query("
+                    SELECT ce.*, c.business_name, c.external_client_id
+                    FROM campaign_emails ce
+                    LEFT JOIN clients c ON ce.client_id = c.id
+                    ORDER BY ce.id DESC
+                    LIMIT 500
+                ");
+                $emails = $stmt->fetchAll();
+                self::jsonResponse([
+                    'success' => true,
+                    'count'   => count($emails),
+                    'emails'  => $emails
+                ]);
+                return;
+            }
             $whereClause = [];
             $params = [];
             if (!empty($extId)) {
