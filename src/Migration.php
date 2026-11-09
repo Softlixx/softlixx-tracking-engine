@@ -22,16 +22,21 @@ class Migration
 
         $executed = 0;
         foreach ($queries as $q) {
-            if (empty($q) || str_starts_with($q, '--') || str_starts_with($q, '/*')) {
+            // Strip SQL line comments (-- ...) and block comments (/* ... */)
+            $cleanQ = preg_replace('/--.*$/m', '', $q);
+            $cleanQ = preg_replace('/\/\*.*?\*\//s', '', $cleanQ);
+            $cleanQ = trim($cleanQ);
+            
+            if (empty($cleanQ)) {
                 continue;
             }
             try {
-                $db->exec($q);
+                $db->exec($cleanQ);
                 $executed++;
             } catch (Exception $e) {
                 // Ignore table already exists errors
                 if (!str_contains($e->getMessage(), 'already exists')) {
-                    error_log("Migration notice on query [{$q}]: " . $e->getMessage());
+                    error_log("Migration notice on query: " . $e->getMessage());
                 }
             }
         }
