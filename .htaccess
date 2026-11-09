@@ -1,0 +1,23 @@
+RewriteEngine On
+RewriteBase /
+
+# Force HTTPS
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Protect sensitive directories
+RewriteRule ^(\.git|config|src|views|schema\.sql) - [F,L]
+
+# Redirect open/TOKEN directly to index.php
+RewriteRule ^open/([a-zA-Z0-9_\-]+)/?$ index.php?route=open&token=$1 [QSA,L]
+
+# Redirect click/TOKEN directly to index.php
+RewriteRule ^click/([a-zA-Z0-9_\-]+)/?$ index.php?route=click&token=$1 [QSA,L]
+
+# Redirect unsubscribe/TOKEN directly to index.php
+RewriteRule ^unsubscribe/([a-zA-Z0-9_\-]+)/?$ index.php?route=unsubscribe&token=$1 [QSA,L]
+
+# Standard front controller routing
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php?route=$1 [QSA,L]
