@@ -80,6 +80,9 @@ use Softlixx\Tracking\TrackingEngine;
 use Softlixx\Tracking\ApiController;
 use Softlixx\Tracking\Migration;
 
+// Initialize database with loaded configuration
+Database::init($appConfig);
+
 // Determine clean request route
 $rawRoute = $_GET['route'] ?? '';
 $route = trim($rawRoute, '/');
@@ -172,7 +175,7 @@ if ($route === 'init-db') {
         exit;
     }
     
-    $res = Migration::run();
+    $res = Migration::run($appConfig);
     header('Content-Type: application/json');
     echo json_encode($res, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     exit;
