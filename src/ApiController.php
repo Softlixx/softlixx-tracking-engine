@@ -95,8 +95,16 @@ class ApiController
         $recipientEmail = strtolower(trim($input['recipient_email'] ?? ''));
         $subject = trim($input['subject'] ?? 'Outreach');
         $seq = (int)($input['email_sequence'] ?? 1);
-        $content = trim($input['email_content'] ?? '');
+        $content = trim($input['email_content'] ?? $input['email_html'] ?? '');
         $targetLinks = $input['target_links'] ?? []; // Array of URLs
+
+        // Auto-extract links from HTML content if target_links not explicitly supplied
+        if (empty($targetLinks) && !empty($content)) {
+            preg_match_all('/href=["\'](https?:\/\/[^"\']+)["\']/i', $content, $m);
+            if (!empty($m[1])) {
+                $targetLinks = array_values(array_unique($m[1]));
+            }
+        }
 
         if (empty($recipientEmail)) {
             self::jsonResponse(['error' => 'recipient_email is required'], 422);
