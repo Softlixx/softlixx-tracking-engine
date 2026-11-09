@@ -392,15 +392,26 @@ class ApiController
 
         try {
             $db = Database::getConnection();
+            $whereClause = [];
+            $params = [];
+            if (!empty($extId)) {
+                $whereClause[] = "c.external_client_id = :ext";
+                $params[':ext'] = $extId;
+            }
+            if (!empty($email)) {
+                $whereClause[] = "ce.recipient_email = :em";
+                $params[':em'] = $email;
+            }
+            $whereSql = implode(" OR ", $whereClause);
+
             $stmt = $db->prepare("
                 SELECT ce.*, c.business_name, c.external_client_id
                 FROM campaign_emails ce
                 LEFT JOIN clients c ON ce.client_id = c.id
-                WHERE (c.external_client_id = :ext AND :ext != '')
-                   OR (ce.recipient_email = :em AND :em != '')
+                WHERE {$whereSql}
                 ORDER BY ce.id DESC
             ");
-            $stmt->execute([':ext' => $extId, ':em' => $email]);
+            $stmt->execute($params);
             $emails = $stmt->fetchAll();
 
             self::jsonResponse([
