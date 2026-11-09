@@ -202,6 +202,22 @@ if ($route === 'init-db') {
 if (str_starts_with($route, 'api/v1/')) {
     $endpoint = substr($route, 7);
     
+    if ($endpoint === 'auth-debug') {
+        $headers = function_exists('getallheaders') ? getallheaders() : [];
+        $db = Database::getConnection();
+        $admin = $db->query("SELECT id, username, api_key_hash FROM admin_users LIMIT 1")->fetch();
+        header('Content-Type: application/json');
+        echo json_encode([
+            'http_auth' => $_SERVER['HTTP_AUTHORIZATION'] ?? null,
+            'redirect_auth' => $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? null,
+            'http_x_api_key' => $_SERVER['HTTP_X_API_KEY'] ?? null,
+            'all_headers' => $headers,
+            'admin_row' => $admin,
+            'db_config' => Database::getConfig()
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        exit;
+    }
+    
     switch ($endpoint) {
         case 'sync-client':
             ApiController::syncClient();
