@@ -1,6 +1,10 @@
 <?php
 declare(strict_types=1);
 
+ini_set('display_errors', '1');
+ini_set('display_startup_errors', '1');
+error_reporting(E_ALL);
+
 /**
  * Softlixx Email Tracking & Intelligence Engine
  * Front Controller & Router
@@ -175,9 +179,20 @@ if ($route === 'init-db') {
         exit;
     }
     
-    $res = Migration::run($appConfig);
-    header('Content-Type: application/json');
-    echo json_encode($res, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+    try {
+        $res = Migration::run($appConfig);
+        header('Content-Type: application/json');
+        echo json_encode($res, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+    } catch (\Throwable $e) {
+        http_response_code(500);
+        header('Content-Type: application/json');
+        echo json_encode([
+            'error' => $e->getMessage(),
+            'file'  => $e->getFile(),
+            'line'  => $e->getLine(),
+            'trace' => $e->getTraceAsString()
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+    }
     exit;
 }
 
