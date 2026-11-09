@@ -1,6 +1,10 @@
 RewriteEngine On
 RewriteBase /
 
+# Pass Authorization header to PHP in FastCGI/CGI environments
+RewriteCond %{HTTP:Authorization} ^(.*)
+RewriteRule .* - [e=HTTP_AUTHORIZATION:%1]
+
 # Force HTTPS
 RewriteCond %{HTTPS} off
 RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]

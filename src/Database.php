@@ -17,6 +17,11 @@ class Database
         self::$config = $config;
     }
 
+    public static function getConfig(): array
+    {
+        return self::$config;
+    }
+
     public static function getConnection(): PDO
     {
         if (self::$instance !== null) {

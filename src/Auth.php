@@ -89,16 +89,34 @@ class Auth
     }
 
     /**
-     * Authenticates Python integration requests via Bearer API Token.
+     * Authenticates Python integration requests via Bearer API Token or X-API-Key header.
      */
     public static function verifyApiToken(): bool
     {
+        $rawToken = '';
+        
+        // 1. Check HTTP_AUTHORIZATION or REDIRECT_HTTP_AUTHORIZATION
         $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
-        if (!str_starts_with($authHeader, 'Bearer ')) {
-            return false;
+        
+        // 2. Check getallheaders() if apache stripped $_SERVER
+        if (empty($authHeader) && function_exists('getallheaders')) {
+            $headers = getallheaders();
+            $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? '';
         }
-
-        $rawToken = trim(substr($authHeader, 7));
+        
+        if (!empty($authHeader) && str_starts_with($authHeader, 'Bearer ')) {
+            $rawToken = trim(substr($authHeader, 7));
+        }
+        
+        // 3. Fallback to X-API-Key
+        if (empty($rawToken)) {
+            $rawToken = $_SERVER['HTTP_X_API_KEY'] ?? '';
+            if (empty($rawToken) && function_exists('getallheaders')) {
+                $headers = getallheaders();
+                $rawToken = $headers['X-API-Key'] ?? $headers['x-api-key'] ?? '';
+            }
+        }
+        
         if (empty($rawToken)) {
             return false;
         }
@@ -109,9 +127,19 @@ class Auth
             $db = Database::getConnection();
             $stmt = $db->prepare("SELECT id FROM admin_users WHERE api_key_hash = :hash LIMIT 1");
             $stmt->execute([':hash' => $tokenHash]);
-            return (bool)$stmt->fetch();
+            if ($stmt->fetch()) {
+                return true;
+            }
+            
+            // Also check direct match against active config file api_key
+            $cfg = Database::getConfig();
+            if (!empty($cfg['api_key']) && hash_equals($cfg['api_key'], $rawToken)) {
+                return true;
+            }
         } catch (Exception $e) {
             return false;
         }
+        
+        return false;
     }
 }
