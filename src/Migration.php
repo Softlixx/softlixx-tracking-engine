@@ -40,7 +40,8 @@ class Migration
         $adminUser = 'admin';
         $adminPass = 'Softlixx#2026!Trk';
         $passHash = password_hash($adminPass, PASSWORD_BCRYPT);
-        $apiKeyHash = hash('sha256', $config['api_key']);
+        $rawApiKey = $config['api_key'] ?? $config['app']['api_key'] ?? 'stk_live_89f02c61d5ab3744e892c55e94b150937c229987a0';
+        $apiKeyHash = hash('sha256', $rawApiKey);
 
         try {
             $stmt = $db->prepare("

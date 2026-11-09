@@ -133,7 +133,8 @@ class Auth
             
             // Also check direct match against active config file api_key
             $cfg = Database::getConfig();
-            if (!empty($cfg['api_key']) && hash_equals($cfg['api_key'], $rawToken)) {
+            $expectedKey = $cfg['api_key'] ?? $cfg['app']['api_key'] ?? '';
+            if (!empty($expectedKey) && hash_equals($expectedKey, $rawToken)) {
                 return true;
             }
         } catch (Exception $e) {
