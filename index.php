@@ -243,6 +243,10 @@ if (str_starts_with($route, 'api/v1/')) {
             ApiController::getCampaignStats();
             break;
             
+        case 'client-emails':
+            ApiController::getClientEmails();
+            break;
+            
         default:
             http_response_code(404);
             header('Content-Type: application/json');

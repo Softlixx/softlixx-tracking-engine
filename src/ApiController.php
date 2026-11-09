@@ -372,4 +372,44 @@ class ApiController
             self::jsonResponse(['error' => $e->getMessage()], 500);
         }
     }
+
+    /**
+     * GET /api/v1/client-emails
+     * Returns tracked emails and engagement statistics for a specific client.
+     */
+    public static function getClientEmails(): void
+    {
+        if (!Auth::verifyApiToken() && !Auth::checkAdmin()) {
+            self::jsonResponse(['error' => 'Unauthorized'], 401);
+        }
+
+        $extId = trim($_GET['external_client_id'] ?? '');
+        $email = strtolower(trim($_GET['recipient_email'] ?? ''));
+
+        if (empty($extId) && empty($email)) {
+            self::jsonResponse(['error' => 'external_client_id or recipient_email is required'], 422);
+        }
+
+        try {
+            $db = Database::getConnection();
+            $stmt = $db->prepare("
+                SELECT ce.*, c.business_name, c.external_client_id
+                FROM campaign_emails ce
+                LEFT JOIN clients c ON ce.client_id = c.id
+                WHERE (c.external_client_id = :ext AND :ext != '')
+                   OR (ce.recipient_email = :em AND :em != '')
+                ORDER BY ce.id DESC
+            ");
+            $stmt->execute([':ext' => $extId, ':em' => $email]);
+            $emails = $stmt->fetchAll();
+
+            self::jsonResponse([
+                'success' => true,
+                'count'   => count($emails),
+                'emails'  => $emails
+            ]);
+        } catch (Exception $e) {
+            self::jsonResponse(['error' => $e->getMessage()], 500);
+        }
+    }
 }
