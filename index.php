@@ -10,8 +10,8 @@ error_reporting(E_ALL);
  * Front Controller & Router
  */
 
-$configPath = file_exists(__DIR__ . '/config.php') ? __DIR__ . '/config.php' : __DIR__ . '/../config.php';
-$baseDir = dirname($configPath);
+$baseDir = __DIR__;
+$configPath = __DIR__ . '/config.php';
 
 // One-time secure provisioning if config.php does not exist yet
 if (!file_exists($configPath)) {
