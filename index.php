@@ -30,6 +30,17 @@ if (!file_exists($configPath)) {
             $installSecret = addslashes($input['install_secret'] ?? 'init_softlixx_2026_trk_a9b8c7');
             
             $configContent = "<?php\ndeclare(strict_types=1);\nreturn [\n"
+                . "    'host' => '{$dbHost}',\n"
+                . "    'port' => 3306,\n"
+                . "    'dbname' => '{$dbName}',\n"
+                . "    'username' => '{$dbUser}',\n"
+                . "    'password' => '{$dbPass}',\n"
+                . "    'charset' => 'utf8mb4',\n"
+                . "    'api_key' => '{$apiKey}',\n"
+                . "    'secret_key' => 'sec_99a8b13c048fe7d2681a95e7c813098741e2f',\n"
+                . "    'install_secret' => '{$installSecret}',\n"
+                . "    'base_url' => 'https://tracking.softlixx.com',\n"
+                . "    'app_name' => 'Softlixx Email Intelligence',\n"
                 . "    'db' => [\n"
                 . "        'host' => '{$dbHost}',\n"
                 . "        'port' => 3306,\n"
