@@ -458,10 +458,28 @@ class ApiController
                 UPDATE campaign_emails
                 SET open_count = :cnt1,
                     human_open_count = :cnt2,
-                    bot_open_count = 0
+                    bot_open_count = 0,
+                    last_opened_at = first_opened_at
                 WHERE id = :id
             ");
             $stmt->execute([':cnt1' => $newCount, ':cnt2' => $newCount, ':id' => $emailId]);
+
+            // Keep only the first original open event in email_events
+            try {
+                $db->exec("
+                    DELETE FROM email_events 
+                    WHERE campaign_email_id = {$emailId} 
+                      AND event_type = 'open' 
+                      AND id NOT IN (
+                          SELECT min_id FROM (
+                              SELECT MIN(id) AS min_id FROM email_events WHERE campaign_email_id = {$emailId} AND event_type = 'open'
+                          ) AS tmp
+                      )
+                ");
+            } catch (Exception $evErr) {
+                // Ignore if subquery restrictions apply
+            }
+
             self::jsonResponse(['success' => true, 'updated_open_count' => $newCount]);
         } catch (Exception $e) {
             self::jsonResponse(['error' => $e->getMessage()], 500);
