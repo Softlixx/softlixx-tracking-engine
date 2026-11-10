@@ -37,6 +37,16 @@ class TrackingEngine
     {
         self::sendNoCacheHeaders("image/gif");
 
+        // Ignore internal previews from Outreach CRM dashboard (localhost, 127.0.0.1, or outreach referrer)
+        $referer = strtolower($_SERVER['HTTP_REFERER'] ?? '');
+        $origin = strtolower($_SERVER['HTTP_ORIGIN'] ?? '');
+        if (str_contains($referer, 'localhost') || str_contains($referer, '127.0.0.1') ||
+            str_contains($origin, 'localhost') || str_contains($origin, '127.0.0.1') ||
+            str_contains($referer, '/outreach')) {
+            echo self::TRANSPARENT_GIF_BYTES;
+            exit;
+        }
+
         if (!empty($rawToken)) {
             $tokenHash = self::hashToken($rawToken);
             $eval = BotDetector::evaluateRequest();

@@ -437,4 +437,34 @@ class ApiController
             self::jsonResponse(['error' => $e->getMessage()], 500);
         }
     }
+
+    public static function resetEmailStats(): void
+    {
+        if (!Auth::verifyApiToken() && !Auth::checkAdmin()) {
+            self::jsonResponse(['error' => 'Unauthorized'], 401);
+        }
+
+        $input = self::getJsonInput();
+        $emailId = (int)($input['campaign_email_id'] ?? 0);
+        $newCount = (int)($input['open_count'] ?? 1);
+
+        if ($emailId <= 0) {
+            self::jsonResponse(['error' => 'Missing campaign_email_id'], 400);
+        }
+
+        try {
+            $db = Database::getConnection();
+            $stmt = $db->prepare("
+                UPDATE campaign_emails
+                SET open_count = :cnt,
+                    human_open_count = :cnt,
+                    bot_open_count = 0
+                WHERE id = :id
+            ");
+            $stmt->execute([':cnt' => $newCount, ':id' => $emailId]);
+            self::jsonResponse(['success' => true, 'updated_open_count' => $newCount]);
+        } catch (Exception $e) {
+            self::jsonResponse(['error' => $e->getMessage()], 500);
+        }
+    }
 }
