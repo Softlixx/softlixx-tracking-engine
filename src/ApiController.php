@@ -456,12 +456,12 @@ class ApiController
             $db = Database::getConnection();
             $stmt = $db->prepare("
                 UPDATE campaign_emails
-                SET open_count = :cnt,
-                    human_open_count = :cnt,
+                SET open_count = :cnt1,
+                    human_open_count = :cnt2,
                     bot_open_count = 0
                 WHERE id = :id
             ");
-            $stmt->execute([':cnt' => $newCount, ':id' => $emailId]);
+            $stmt->execute([':cnt1' => $newCount, ':cnt2' => $newCount, ':id' => $emailId]);
             self::jsonResponse(['success' => true, 'updated_open_count' => $newCount]);
         } catch (Exception $e) {
             self::jsonResponse(['error' => $e->getMessage()], 500);
